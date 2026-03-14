@@ -76,10 +76,19 @@ var onload = function() {
             };
             
             deepAssignState(window.pb, state);
-            
+
+            // Always keep event listener functions local — never proxy them via RPC.
+            // deepAssignState overwrites them with proxies because they appear as
+            // functions in the serialized background state.
+            window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
+            window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
+
             chrome.runtime.onMessage.addListener(function(msg) {
                 if (msg.type === 'pb_state_update') {
                     deepAssignState(window.pb, msg.state);
+                    // Re-pin after every state update too
+                    window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
+                    window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
                 } else if (msg.type === 'pb_event') {
                     window.dispatchEvent(new CustomEvent(msg.eventName, {detail: msg.detail}));
                 }
