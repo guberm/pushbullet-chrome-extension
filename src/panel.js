@@ -76,7 +76,7 @@ var setUp = function() {
         pb.openTab('https://support.mozilla.org/en-US/kb/disable-third-party-cookies')
     }
 
-    if (!pb.local.user) {
+    if (!pb.local || !pb.local.user) {
         return
     }
 

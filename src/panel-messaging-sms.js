@@ -239,7 +239,7 @@ var setUpThreads = function(threads) {
         threadsHolder.removeChild(threadsHolder.lastChild)
     }
 
-    if (!pb.local.user) {
+    if (!pb.local || !pb.local.user) {
         return
     }
 

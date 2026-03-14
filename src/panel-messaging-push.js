@@ -53,7 +53,7 @@ var pushesLocalsChangedListener = function() {
         return
     }
 
-    if (!pb.local.user) {
+    if (!pb.local || !pb.local.user) {
         return
     }
 
