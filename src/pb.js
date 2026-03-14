@@ -23,7 +23,6 @@ pb.checkApi2 = function(done) {
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            onResponse(xhr.status, xhr.responseText, done)
             if (xhr.status == 200) {
                 var parsed = JSON.parse(xhr.responseText)
                 if (pb.browser == 'firefox') {
