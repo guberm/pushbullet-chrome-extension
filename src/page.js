@@ -24,6 +24,14 @@ function buildProxyFunction(path) {
     };
 }
 
+// Ensure background-only functions are always callable as proxies,
+// even before deepAssignState() populates them from the background state.
+;['clearActiveChat', 'setActiveChat', 'track', 'sendPush', 'openChat'].forEach(function(fn) {
+    if (typeof pb[fn] !== 'function') {
+        pb[fn] = buildProxyFunction([fn]);
+    }
+});
+
 function deepAssignState(target, source, path=[]) {
     for (let k of Object.keys(source)) {
         if (source[k] && source[k].__isFunction) {
@@ -134,9 +142,11 @@ var addBodyCssClasses = function() {
 document.addEventListener('DOMContentLoaded', onload)
 
 window.onerror = function(message, file, line, column, error) {
-    pb.track({
-        'name': 'error',
-        'stack': error ? error.stack : file + ':' + line + ':' + column,
-        'message': message
-    })
+    if (typeof pb.track === 'function') {
+        pb.track({
+            'name': 'error',
+            'stack': error ? error.stack : file + ':' + line + ':' + column,
+            'message': message
+        })
+    }
 }
