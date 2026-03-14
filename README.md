@@ -2,6 +2,8 @@
 
 A Chrome extension that brings together your devices, friends, and the things you care about. Built on Manifest V3 with Dark Mode support.
 
+> **Note:** This repository includes community-applied fixes to migrate the original Pushbullet extension to **Manifest V3** (MV3), which is required by Chrome since the deprecation of Manifest V2. Changes include replacing the background page with a service worker (`sw.js`), updating the offscreen document model for audio playback, and wiring up an RPC bridge (`page.js` / `rpc-server.js`) so UI pages can communicate with the background context.
+
 ## Features
 
 - Push links, notes, files, and addresses between devices
