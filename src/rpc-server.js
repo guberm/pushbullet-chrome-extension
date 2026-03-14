@@ -32,14 +32,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 obj = obj[parts[i]];
             }
             let func = obj[parts[parts.length - 1]];
-            
-            // Process args: if the last arg is a callback object, we must wrap it!
-            // But wait, the foreground can't send functions over messaging.
-            // Oh right, callbacks won't work in this simple Proxy!
-            
-            let res = func.apply(obj, message.args || []);
-            // Assuming functions in `pb` like `sendPush` don't need UI callbacks.
-            sendResponse({ success: true, result: res });
+
+            if (message.hasCallback) {
+                // Inject a synthetic callback that returns the result via sendResponse.
+                const callArgs = [...(message.args || []), function(result) {
+                    sendResponse(result !== undefined ? result : null);
+                }];
+                func.apply(obj, callArgs);
+                return true; // keep channel open for async response
+            } else {
+                let res = func.apply(obj, message.args || []);
+                sendResponse({ success: true, result: res });
+            }
         } catch (e) {
             console.error('RPC call fell through', message.path, e);
             sendResponse({ success: false, error: e.toString() });

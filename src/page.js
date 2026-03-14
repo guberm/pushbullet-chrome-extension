@@ -20,7 +20,17 @@ window.addEventListener('blur', function() {
 
 function buildProxyFunction(path) {
     return function(...args) {
-        chrome.runtime.sendMessage({ type: 'call_pb_function', path: path, args: args });
+        // If the last arg is a function (callback), strip it and use the response channel.
+        const lastArg = args[args.length - 1];
+        if (typeof lastArg === 'function') {
+            const callback = args.pop();
+            chrome.runtime.sendMessage(
+                { type: 'call_pb_function', path: path, args: args, hasCallback: true },
+                function(result) { callback(result); }
+            );
+        } else {
+            chrome.runtime.sendMessage({ type: 'call_pb_function', path: path, args: args });
+        }
     };
 }
 
