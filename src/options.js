@@ -39,11 +39,7 @@ var textMappings = {
     'e2e-save': 'save',
     'e2e-clear': 'clear',
     'question1': 'how_to_unmute_app',
-    'answer1': 'how_to_unmute_app_answer',
-    'pro-required': 'pushbullet_pro_required',
-    'pro-required-desc': 'pushbullet_pro_feature',
-    'pro-dialog-more': 'learn_more',
-    'pro-dialog-cancel': 'cancel'
+    'answer1': 'how_to_unmute_app_answer'
 }
 
 window.init = function() {
@@ -57,10 +53,6 @@ window.init = function() {
     if (pb.local && pb.local.user) {
         document.getElementById('account-holder').style.display = 'block'
         document.getElementById('account-image').src = pb.local.user.image_url || 'chip_user.png'
-
-        if (pb.local.user.pro) {
-            document.getElementById('ribbon').style.display = 'block'
-        }
 
         if (pb.settings.darkMode) {
             document.body.classList.add('darkmode')
@@ -347,23 +339,4 @@ var optionChanged = function(key, value) {
     }
 }
 
-var showProPrompt = function() {
-    document.getElementById('overlay').style.display = 'block'
-    document.getElementById('overlay').onclick = function() {
-        hideProPrompt()
-    }
-    document.getElementById('pro-dialog').onclick = function(e) {
-        e.cancelBubble = true
-    }
-    document.getElementById('pro-dialog-cancel').onclick = function() {
-        hideProPrompt()
-    }
-    document.getElementById('pro-dialog-more').onclick = function () {
-        pb.openTab(pb.www + '/pro')
-        hideProPrompt()
-    }
-}
 
-var hideProPrompt = function() {
-    document.getElementById('overlay').style.display = 'none'
-}

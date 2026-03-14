@@ -17,7 +17,6 @@ var textMappings = {
     'compose-recipient-picker-label': 'recipient_placeholder',
     'settings': 'options',
     'sign-out': 'sign_out',
-    'pushbullet-pro': 'pushbullet_pro',
     'sms-no-devices-text': 'sms_no_devices_text'
 }
 
@@ -234,9 +233,6 @@ var setUpAccountContent = function() {
     document.getElementById('account-email').textContent = pb.local.user.email
     document.getElementById('account-image').src = pb.local.user.image_url || 'chip_user.png'
 
-    if (pb.local.user.pro) {
-        document.getElementById('ribbon').style.display = 'block'
-    }
 }
 
 var setUpSnooze = function() {
