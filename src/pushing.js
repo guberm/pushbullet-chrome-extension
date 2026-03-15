@@ -1,6 +1,10 @@
 'use strict'
 
-pb.pushQueue = []
+try {
+    pb.pushQueue = localStorage.pushQueue ? JSON.parse(localStorage.pushQueue) : []
+} catch(e) {
+    pb.pushQueue = []
+}
 pb.failedPushes = []
 pb.successfulPushes = {}
 
@@ -17,11 +21,20 @@ pb.sendPush = function(push) {
 
     push.queued = true
     pb.pushQueue.push(push)
+    localStorage.pushQueue = JSON.stringify(pb.pushQueue)
 
     pb.dispatchEvent('locals_changed')
 
     processPushQueue()
 }
+
+// Resume any pushes that were queued before a service worker restart.
+pb.addEventListener('signed_in', function() {
+    if (pb.pushQueue.length > 0) {
+        pb.log('Resuming ' + pb.pushQueue.length + ' queued push(es) from previous session')
+        processPushQueue()
+    }
+})
 
 pb.clearFailed = function(push) {
     pb.failedPushes = pb.failedPushes.filter(function(failed) {
@@ -64,6 +77,7 @@ var processPushQueue = function() {
 
     pb.post(pb.api + '/v2/pushes', real, function(response) {
         pb.pushQueue.shift()
+        localStorage.pushQueue = JSON.stringify(pb.pushQueue)
 
         processingPush = false
 

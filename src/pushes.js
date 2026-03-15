@@ -20,9 +20,9 @@ pb.addEventListener('signed_in', function() {
             })
 
             if (filtered.length > 0) {
-                localStorage.notifyAfter = filtered[filtered.length - 1].modified - 10
+                localStorage.notifyAfter = filtered[filtered.length - 1].modified + 0.001
             } else if (pushes.length > 0) {
-                localStorage.notifyAfter = pushes[0].modified - 10
+                localStorage.notifyAfter = pushes[0].modified + 0.001
             }
 
             utils.wrap(function() {
