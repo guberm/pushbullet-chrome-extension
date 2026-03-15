@@ -26,10 +26,18 @@ function buildProxyFunction(path) {
             const callback = args.pop();
             chrome.runtime.sendMessage(
                 { type: 'call_pb_function', path: path, args: args, hasCallback: true },
-                function(result) { callback(result); }
+                function(result) {
+                    // Always read lastError to prevent Chrome from throwing an unchecked error
+                    // when the background port closes before responding.
+                    if (chrome.runtime.lastError) { return; }
+                    callback(result);
+                }
             );
         } else {
-            chrome.runtime.sendMessage({ type: 'call_pb_function', path: path, args: args });
+            chrome.runtime.sendMessage(
+                { type: 'call_pb_function', path: path, args: args },
+                function() { void chrome.runtime.lastError; }
+            );
         }
     };
 }
