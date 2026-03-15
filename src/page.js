@@ -46,7 +46,18 @@ function deepAssignState(target, source, path=[]) {
     for (let k of Object.keys(source)) {
         if (source[k] && source[k].__isFunction) {
             target[k] = buildProxyFunction([...path, k]);
-        } else if (source[k] && typeof source[k] === 'object' && !Array.isArray(source[k])) {
+        } else if (Array.isArray(source[k])) {
+            // Recursively process array elements so nested __isFunction markers
+            // inside button/item objects are converted to proxy functions.
+            target[k] = source[k].map(function(item, i) {
+                if (item && typeof item === 'object' && !Array.isArray(item)) {
+                    var obj = {};
+                    deepAssignState(obj, item, [...path, k, String(i)]);
+                    return obj;
+                }
+                return item;
+            });
+        } else if (source[k] && typeof source[k] === 'object') {
             if (!target[k]) target[k] = {};
             deepAssignState(target[k], source[k], [...path, k]);
         } else {
