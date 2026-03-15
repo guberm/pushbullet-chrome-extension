@@ -97,6 +97,10 @@ pb.log = function(message) {
         }
         if (pb.settings && pb.settings.enableFullLog) {
             pb.fullLog.push(serialized)
+            // Broadcast to any open log viewer pages in real-time.
+            try {
+                chrome.runtime.sendMessage({ type: 'log_entry', entry: serialized }).catch(function(){})
+            } catch(e) {}
         }
     } catch (e) {
         console.error(e)

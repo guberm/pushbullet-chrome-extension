@@ -118,6 +118,10 @@ var setUpFullLogOption = function() {
         status.textContent = checkbox.checked ? 'Logging enabled.' : 'Logging disabled.'
     }
 
+    document.getElementById('log-viewer-btn').onclick = function() {
+        window.open(chrome.runtime.getURL('log-viewer.html'), '_blank')
+    }
+
     document.getElementById('log-download-btn').onclick = function() {
         chrome.runtime.sendMessage({ type: 'get_full_log' }, function(response) {
             if (chrome.runtime.lastError || !response) {
