@@ -50,7 +50,16 @@ function buildProxyFunction(path) {
     }
 });
 
+// Keys that are pinned locally and must never be deleted by deepAssignState.
+var LOCAL_PINNED = { addEventListener: true, removeEventListener: true };
+
 function deepAssignState(target, source, path=[]) {
+    // Delete keys that no longer exist in the background state (e.g. dismissed notifications).
+    for (let k of Object.keys(target)) {
+        if (!LOCAL_PINNED[k] && !(k in source)) {
+            delete target[k];
+        }
+    }
     for (let k of Object.keys(source)) {
         if (source[k] && source[k].__isFunction) {
             target[k] = buildProxyFunction([...path, k]);
@@ -66,13 +75,41 @@ function deepAssignState(target, source, path=[]) {
                 return item;
             });
         } else if (source[k] && typeof source[k] === 'object') {
-            if (!target[k]) target[k] = {};
+            if (!target[k] || typeof target[k] !== 'object') target[k] = {};
             deepAssignState(target[k], source[k], [...path, k]);
         } else {
             target[k] = source[k];
         }
     }
 }
+
+// Buffer for state updates that arrive before findPb completes.
+var _pendingStateMsg = null;
+var _stateReady = false;
+
+function applyStateMsg(msg) {
+    deepAssignState(window.pb, msg.state);
+    // Re-pin local event listeners so they're never proxied via RPC.
+    window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
+    window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
+    // Fire the associated event AFTER state is applied.
+    if (msg.eventName) {
+        window.dispatchEvent(new CustomEvent(msg.eventName));
+    }
+}
+
+// Register listener immediately (top-level) so no messages are dropped
+// during the async findPb round-trip.
+chrome.runtime.onMessage.addListener(function(msg) {
+    if (msg.type === 'pb_state_update') {
+        if (_stateReady) {
+            applyStateMsg(msg);
+        } else {
+            // Queue: keep only the latest snapshot — we only need the most recent state.
+            _pendingStateMsg = msg;
+        }
+    }
+});
 
 var onload = function() {
     onload = null;
@@ -86,35 +123,22 @@ var onload = function() {
             }
             
             window.pb = window.pb || {};
-            // Emulate pb.addEventListener since it's commonly used locally too
-            window.pb.addEventListener = function(evt, cb) {
-                window.addEventListener(evt, cb);
-            };
-            window.pb.removeEventListener = function(evt, cb) {
-                window.removeEventListener(evt, cb);
-            };
+            window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
+            window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
             
             deepAssignState(window.pb, state);
 
-            // Always keep event listener functions local — never proxy them via RPC.
-            // deepAssignState overwrites them with proxies because they appear as
-            // functions in the serialized background state.
+            // Re-pin after deepAssignState (which may have proxied these).
             window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
             window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
 
-            chrome.runtime.onMessage.addListener(function(msg) {
-                if (msg.type === 'pb_state_update') {
-                    deepAssignState(window.pb, msg.state);
-                    // Re-pin after every state update too
-                    window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
-                    window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
-                    // Fire the associated event AFTER state is applied so listeners
-                    // always see up-to-date state (fixes notifications_changed race).
-                    if (msg.eventName) {
-                        window.dispatchEvent(new CustomEvent(msg.eventName));
-                    }
-                }
-            });
+            _stateReady = true;
+
+            // Apply any state update that arrived while we were waiting for get_pb_state.
+            if (_pendingStateMsg) {
+                applyStateMsg(_pendingStateMsg);
+                _pendingStateMsg = null;
+            }
             
             ready();
         });

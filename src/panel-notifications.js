@@ -13,6 +13,9 @@ var notificationsChangedListener = function() {
     if (!window) {
         return
     }
+    if (!pb.notifier || !pb.notifier.active) {
+        return
+    }
 
     var count = Object.keys(pb.notifier.active).length
     var tab = document.getElementById('notifications-tab-label')
@@ -52,11 +55,8 @@ var updateNotifications = function() {
 }
 
 var clearNotification = function(options) {
-    chrome.notifications.clear(options.key, function(wasCleared) {
-        delete pb.notifier.active[options.key]
-        pb.dispatchEvent('notifications_changed')
-        if (options.onclose) {
-            options.onclose()
-        }
-    })
+    // Delegate to background via RPC so pb.notifier.active is authoritatively
+    // updated in the background and the state broadcast properly removes the
+    // notification from the panel on the next pb_state_update.
+    pb.notifier.dismiss(options.key)
 }
