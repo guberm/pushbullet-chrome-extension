@@ -11,6 +11,14 @@ var setUpNotificationsContent = function() {
         chrome.runtime.sendMessage({ type: 'get_pb_state' }, function(state) {
             if (chrome.runtime.lastError || !state || !state.notifier) return
             var prev = JSON.stringify(pb.notifier && pb.notifier.active || {})
+            // Remove keys that no longer exist in background state (e.g. after SW restart).
+            // deepAssignState only adds/updates, it never deletes keys.
+            if (pb.notifier && pb.notifier.active) {
+                var freshActive = (state.notifier && state.notifier.active) || {}
+                Object.keys(pb.notifier.active).forEach(function(k) {
+                    if (!freshActive.hasOwnProperty(k)) delete pb.notifier.active[k]
+                })
+            }
             // Must go through deepAssignState so __isFunction markers get
             // converted to proxy functions (direct assignment breaks button.onclick).
             deepAssignState(window.pb, state)
