@@ -192,6 +192,19 @@ var updateNotifications = function(groups) {
             } catch (e) {
                 options.contextMessage = party.name
             }
+        } else {
+            // Self push — show source → target device info as context
+            var srcDevice = firstPush.source_device_iden && pb.local.devices[firstPush.source_device_iden]
+            var dstDevice = firstPush.target_device_iden && pb.local.devices[firstPush.target_device_iden]
+            var srcName = srcDevice ? (srcDevice.nickname || srcDevice.model || 'Unknown') : null
+            var dstName = dstDevice ? (dstDevice.nickname || dstDevice.model || 'Unknown') : null
+            if (srcName && dstName) {
+                options.contextMessage = srcName + ' \u2192 ' + dstName
+            } else if (srcName) {
+                options.contextMessage = 'From: ' + srcName
+            } else if (dstName) {
+                options.contextMessage = 'To: ' + dstName
+            }
         }
 
         if (!options.iconUrl) {
