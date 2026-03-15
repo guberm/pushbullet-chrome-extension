@@ -92,8 +92,12 @@ function applyStateMsg(msg) {
     // Re-pin local event listeners so they're never proxied via RPC.
     window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
     window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
-    // Fire the associated event AFTER state is applied.
-    if (msg.eventName) {
+    // Always fire notifications_changed after any state update so the
+    // notifications panel re-renders with fresh data even when the triggering
+    // event is 'active' or 'locals_changed' rather than 'notifications_changed'.
+    window.dispatchEvent(new CustomEvent('notifications_changed'));
+    // Also fire the specific event if it differs.
+    if (msg.eventName && msg.eventName !== 'notifications_changed') {
         window.dispatchEvent(new CustomEvent(msg.eventName));
     }
 }

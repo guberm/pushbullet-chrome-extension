@@ -1,12 +1,31 @@
 'use strict'
 
+var _notificationsPollInterval = null;
+
 var setUpNotificationsContent = function() {
     notificationsChangedListener()
     pb.addEventListener('notifications_changed', notificationsChangedListener)
+    // Poll the background for fresh state every 2s as a safety net in case
+    // a state update message was dropped or arrived before listeners were ready.
+    _notificationsPollInterval = setInterval(function() {
+        chrome.runtime.sendMessage({ type: 'get_pb_state' }, function(state) {
+            if (chrome.runtime.lastError || !state || !state.notifier) return
+            if (!pb.notifier) pb.notifier = {}
+            var prev = JSON.stringify(pb.notifier.active || {})
+            pb.notifier.active = state.notifier.active || {}
+            if (JSON.stringify(pb.notifier.active) !== prev) {
+                notificationsChangedListener()
+            }
+        })
+    }, 2000)
 }
 
 var tearDownNotificationsContent = function() {
     pb.removeEventListener('notifications_changed', notificationsChangedListener)
+    if (_notificationsPollInterval) {
+        clearInterval(_notificationsPollInterval)
+        _notificationsPollInterval = null
+    }
 }
 
 var notificationsChangedListener = function() {
