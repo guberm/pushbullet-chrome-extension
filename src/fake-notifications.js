@@ -48,6 +48,7 @@ window.fakeNotifications.renderNotification = function(options, onclose) {
     var buttonsHolder = document.createElement('div')
     if (options.allButtons) {
         options.allButtons.forEach(function(button) {
+            if (!button) return
             buttonsHolder.appendChild(makeButton(button, onclose))
         })
     }

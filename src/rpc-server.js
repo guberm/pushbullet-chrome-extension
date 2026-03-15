@@ -2,7 +2,7 @@
 // Exposes the pb object to UI pages via messaging
 
 function serializeState(obj, depth=0) {
-    if (depth > 6) return null;
+    if (depth > 12) return null;
     if (obj === null || obj === undefined) return obj;
     if (typeof obj === 'function') return { __isFunction: true };
     if (Array.isArray(obj)) return obj.map(v => serializeState(v, depth+1));
