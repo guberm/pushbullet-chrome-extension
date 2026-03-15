@@ -108,8 +108,11 @@ var onload = function() {
                     // Re-pin after every state update too
                     window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
                     window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb); };
-                } else if (msg.type === 'pb_event') {
-                    window.dispatchEvent(new CustomEvent(msg.eventName, {detail: msg.detail}));
+                    // Fire the associated event AFTER state is applied so listeners
+                    // always see up-to-date state (fixes notifications_changed race).
+                    if (msg.eventName) {
+                        window.dispatchEvent(new CustomEvent(msg.eventName));
+                    }
                 }
             });
             

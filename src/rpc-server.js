@@ -64,17 +64,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-// Broadcast state changes whenever events fire
-const broadcastState = () => {
-    chrome.runtime.sendMessage({ 
-        type: 'pb_state_update', 
-        state: serializeState(window.pb) 
-    }).catch(() => {});
-};
-
+// Broadcast state changes whenever events fire.
+// We piggyback the eventName on the state update so the panel always
+// applies new state BEFORE firing the event — preventing race conditions
+// where the event arrives before the state (e.g. notifications_changed).
 ['active', 'locals_changed', 'notifications_changed', 'signed_in', 'signed_out'].forEach(evt => {
     pb.addEventListener(evt, () => {
-        broadcastState();
-        chrome.runtime.sendMessage({ type: 'pb_event', eventName: evt }).catch(() => {});
+        chrome.runtime.sendMessage({
+            type: 'pb_state_update',
+            state: serializeState(window.pb),
+            eventName: evt
+        }).catch(() => {});
     });
 });
