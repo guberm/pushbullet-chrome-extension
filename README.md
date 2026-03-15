@@ -1,49 +1,62 @@
 # Pushbullet Chrome Extension
 
-A Chrome extension that brings together your devices, friends, and the things you care about. Built on Manifest V3 with Dark Mode support.
+A community-maintained Chrome extension that brings together your devices and the things you care about — push notifications, SMS, file sharing, and more. Fully migrated to **Manifest V3** with all Pro/paid gates removed so every feature works for free.
 
-> **Note:** This repository includes community-applied fixes to migrate the original Pushbullet extension to **Manifest V3** (MV3), which is required by Chrome since the deprecation of Manifest V2. Changes include replacing the background page with a service worker (`sw.js`), updating the offscreen document model for audio playback, and wiring up an RPC bridge (`page.js` / `rpc-server.js`) so UI pages can communicate with the background context.
+## What's different from the official extension
+
+- **Manifest V3** — migrated from the deprecated MV2. Uses a service worker (`sw.js`) and an offscreen document (`background.html`) instead of a persistent background page. An RPC bridge (`page.js` / `rpc-server.js`) lets UI pages communicate with the background context.
+- **All features unlocked** — every Pro/paid restriction has been removed. SMS replies, notification actions, quick replies, and all other gated features work without a subscription.
+- **Bug fixes** — numerous runtime errors from the MV3 migration have been fixed, including notification delivery, button onclick proxying, offscreen document race conditions, and `checkNativeClient` callback handling.
+- **Live Log Viewer** — built-in real-time log viewer with filtering, auto-scroll, and file download (accessible from Options).
 
 ## Features
 
 - Push links, notes, files, and addresses between devices
-- SMS messaging from your browser
-- Phone call notifications mirrored to your desktop
-- Real-time notifications mirroring from your Android device
-- End-to-end encryption support
+- SMS messaging from your browser (send & reply)
+- Android notification mirroring with action buttons
+- Phone call notifications on your desktop
+- Quick reply to SMS and notifications
+- End-to-end encryption
 - Dark mode
 - Keyboard shortcuts
+- Live debug log viewer (Options → Debug Logs)
 
-## Project Structure
+## Installation
 
-```
-├── src/                  # Extension source files
-│   ├── manifest.json     # Extension manifest (MV3)
-│   ├── sw.js             # Service worker (background)
-│   ├── panel.html        # Main popup UI
-│   ├── panel.js          # Popup logic
-│   ├── options.html      # Options/settings page
-│   ├── options.js        # Settings logic
-│   ├── _locales/         # Internationalization strings (29 languages)
-│   └── ...               # Additional JS, CSS, and asset files
-└── README.md
-```
-
-## Installation (Load Unpacked)
+### Option A — Load unpacked (recommended for development)
 
 1. Clone this repository:
    ```bash
    git clone https://github.com/guberm/pushbullet-chrome-extension.git
-   cd pushbullet-chrome-extension
    ```
+2. Open Chrome and go to `chrome://extensions/`
+3. Enable **Developer mode** (top-right toggle)
+4. Click **Load unpacked** and select the `src/` folder
+5. Click the Pushbullet icon in the toolbar and sign in
 
-2. Open Chrome and navigate to `chrome://extensions/`.
+### Option B — Install from ZIP
 
-3. Enable **Developer mode** (toggle in the top-right corner).
+1. Download `pushbullet-extension.zip` from this repository
+2. Extract it — you'll get a folder with the extension files
+3. Follow steps 2–5 above, selecting the extracted folder
 
-4. Click **Load unpacked** and select the `src/` folder inside the cloned repository.
+## Project Structure
 
-5. The Pushbullet icon will appear in your Chrome toolbar. Click it and sign in with your Pushbullet account.
+```
+├── src/
+│   ├── manifest.json         # MV3 manifest
+│   ├── sw.js                 # Service worker entry point
+│   ├── background.html       # Offscreen document (WebSocket, notifications)
+│   ├── rpc-server.js         # RPC bridge: exposes pb object to UI pages
+│   ├── page.js               # RPC client: proxies pb calls from UI pages
+│   ├── panel.html / panel.js # Main popup UI
+│   ├── options.html / options.js  # Settings page
+│   ├── log-viewer.html / log-viewer.js  # Real-time log viewer
+│   ├── _locales/             # i18n strings (29 languages)
+│   └── ...                   # Additional JS, CSS, and assets
+├── pushbullet-extension.zip  # Ready-to-install package
+└── README.md
+```
 
 ## Keyboard Shortcuts
 
@@ -51,13 +64,25 @@ A Chrome extension that brings together your devices, friends, and the things yo
 |---|---|
 | `Ctrl+Shift+K` / `Cmd+Shift+K` | Dismiss the most recent notification |
 | `Ctrl+Shift+X` / `Cmd+Shift+X` | Instantly push the current tab |
+| `Ctrl+Shift+E` / `Cmd+Shift+E` | Pop out the push panel |
 
-You can customise shortcuts at `chrome://extensions/shortcuts`.
+Customize shortcuts at `chrome://extensions/shortcuts`.
+
+## Debug Logging
+
+1. Open **Options** → scroll to **Debug Logs**
+2. Enable **"Enable full logging"**
+3. Click **"📋 Open Live Log Viewer"** — a new tab opens with real-time logs
+4. Use the filter bar to search, **⬇ Download** to save to a file, **🗑 Clear** to reset
 
 ## Requirements
 
-- Google Chrome 109 or later
-- A [Pushbullet](https://www.pushbullet.com) account
+- Google Chrome 109 or later (or any Chromium-based browser)
+- A [Pushbullet](https://www.pushbullet.com) account (free account works — all features unlocked)
+
+## License
+
+Original extension © Pushbullet. Community modifications in this repository are provided as-is for personal use.
 - Pushbullet app installed on your Android or iOS device (for mirroring features)
 
 ## Permissions
