@@ -1,13 +1,24 @@
+let _offscreenPromise = null;
 async function setupOffscreenDocument() {
-  const offscreenUrl = 'background.html';
-  if (await chrome.offscreen.hasDocument()) {
-    return;
-  }
-  await chrome.offscreen.createDocument({
-    url: offscreenUrl,
-    reasons: ['AUDIO_PLAYBACK'],
-    justification: 'keep background functional for background websocket connection'
-  });
+  if (_offscreenPromise) return _offscreenPromise;
+  _offscreenPromise = (async () => {
+    try {
+      if (await chrome.offscreen.hasDocument()) return;
+      await chrome.offscreen.createDocument({
+        url: 'background.html',
+        reasons: ['AUDIO_PLAYBACK'],
+        justification: 'keep background functional for background websocket connection'
+      });
+    } catch (e) {
+      // Already exists or another call beat us to it — safe to ignore.
+      if (!e.message || !e.message.includes('single offscreen document')) {
+        console.error('setupOffscreenDocument error', e);
+      }
+    } finally {
+      _offscreenPromise = null;
+    }
+  })();
+  return _offscreenPromise;
 }
 
 chrome.runtime.onStartup.addListener(setupOffscreenDocument);
