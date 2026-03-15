@@ -179,6 +179,15 @@ var timeOnScreen = function(options) {
 }
 
 pb.notifier.dismiss = function(key) {
+    // If the notification has an onclose handler (set by updateNotifications),
+    // call it now so the push is marked dismissed in localStorage and on the server.
+    // Internal calls (server-side sync) already null out onclose before calling dismiss.
+    var existing = pb.notifier.active[key]
+    if (existing && existing.onclose) {
+        existing.onclose()
+        existing.onclose = null
+    }
+
     chrome.notifications.clear(key, function(wasCleared) {
         pb.log('Dismissed ' + key)
         delete pb.notifier.active[key]
