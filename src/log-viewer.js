@@ -84,6 +84,21 @@ document.getElementById('btn-clear').onclick = function() {
     })
 }
 
+document.getElementById('btn-copy').onclick = function() {
+    if (allEntries.length === 0) { alert('No logs to copy.'); return }
+    var lines = allEntries.map(function(r) {
+        try { return JSON.parse(r) } catch(e) { return r }
+    }).join('\n')
+    navigator.clipboard.writeText(lines).then(function() {
+        var btn = document.getElementById('btn-copy')
+        var orig = btn.textContent
+        btn.textContent = '✅ Copied!'
+        setTimeout(function() { btn.textContent = orig }, 1500)
+    }).catch(function() {
+        alert('Copy failed — try downloading instead.')
+    })
+}
+
 document.getElementById('btn-download').onclick = function() {
     if (allEntries.length === 0) { alert('No logs to download.'); return }
     var lines = allEntries.map(function(r) {
