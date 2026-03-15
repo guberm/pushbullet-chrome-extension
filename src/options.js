@@ -88,7 +88,7 @@ var setUpOptions = function() {
     basicOption('context-menu-checkbox', 'showContextMenu')
 
     if (pb.browser == 'chrome') {
-        setUpBackgroundPermission()
+        // setUpBackgroundPermission() — 'background' is not a valid optional permission in MV3
         setUpInstantPushOption()
     }
 
