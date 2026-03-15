@@ -18,8 +18,7 @@ pb.addEventListener('signed_in', function(e) {
     pb.addEventListener('stream_message', function(e) {
         var message = e.detail
 
-        pb.log('Received message:')
-        pb.log(message)
+        pb.log('Received message:\n' + JSON.stringify(message, null, 2))
 
         if (message.type == 'nop') {
             lastNop = Date.now()

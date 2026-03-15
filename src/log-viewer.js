@@ -84,11 +84,19 @@ document.getElementById('btn-clear').onclick = function() {
     })
 }
 
+function entriesToText() {
+    return allEntries.map(function(r) {
+        try {
+            var parsed = JSON.parse(r)
+            if (typeof parsed === 'string') return parsed
+            return JSON.stringify(parsed, null, 2)
+        } catch(e) { return r }
+    }).join('\n')
+}
+
 document.getElementById('btn-copy').onclick = function() {
     if (allEntries.length === 0) { alert('No logs to copy.'); return }
-    var lines = allEntries.map(function(r) {
-        try { return JSON.parse(r) } catch(e) { return r }
-    }).join('\n')
+    var lines = entriesToText()
     navigator.clipboard.writeText(lines).then(function() {
         var btn = document.getElementById('btn-copy')
         var orig = btn.textContent
@@ -101,9 +109,7 @@ document.getElementById('btn-copy').onclick = function() {
 
 document.getElementById('btn-download').onclick = function() {
     if (allEntries.length === 0) { alert('No logs to download.'); return }
-    var lines = allEntries.map(function(r) {
-        try { return JSON.parse(r) } catch(e) { return r }
-    }).join('\n')
+    var lines = entriesToText()
     var blob = new Blob([lines], { type: 'text/plain' })
     var url  = URL.createObjectURL(blob)
     var a    = document.createElement('a')
