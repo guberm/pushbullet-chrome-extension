@@ -81,7 +81,7 @@ var clearNotification = function(options) {
     if (pb.notifier && pb.notifier.active) {
         delete pb.notifier.active[options.key]
     }
-    updateNotifications()
+    notificationsChangedListener()
 
     // Also dismiss in the background (clears the system notification + syncs state).
     chrome.notifications.clear(options.key, function() {

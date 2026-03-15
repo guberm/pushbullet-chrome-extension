@@ -88,6 +88,15 @@ var _pendingStateMsg = null;
 var _stateReady = false;
 
 function applyStateMsg(msg) {
+    // deepAssignState cannot remove keys — sync notifier.active deletions manually.
+    if (msg.state && msg.state.notifier && window.pb && window.pb.notifier) {
+        var incomingActive = msg.state.notifier.active || {};
+        Object.keys(window.pb.notifier.active || {}).forEach(function(k) {
+            if (!incomingActive.hasOwnProperty(k)) {
+                delete window.pb.notifier.active[k];
+            }
+        });
+    }
     deepAssignState(window.pb, msg.state);
     // Re-pin local event listeners so they're never proxied via RPC.
     window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb); };
