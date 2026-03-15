@@ -80,7 +80,7 @@ var onload = function() {
     
     var findPb = function() {
         chrome.runtime.sendMessage({type: 'get_pb_state'}, function(state) {
-            if (!state) {
+            if (chrome.runtime.lastError || !state) {
                 setTimeout(findPb, 100);
                 return;
             }
