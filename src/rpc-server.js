@@ -29,9 +29,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             let parts = message.path;
             let obj = window.pb;
             for (let i = 0; i < parts.length - 1; i++) {
+                if (obj == null) {
+                    sendResponse({ success: false, error: `Path traversal failed at "${parts[i]}": parent is null/undefined` });
+                    return true;
+                }
                 obj = obj[parts[i]];
             }
+            if (obj == null) {
+                sendResponse({ success: false, error: `Parent at path "${parts.slice(0, -1).join('.')}" is null/undefined` });
+                return true;
+            }
             let func = obj[parts[parts.length - 1]];
+            if (typeof func !== 'function') {
+                sendResponse({ success: false, error: `"${parts.join('.')}" is not a function` });
+                return true;
+            }
 
             if (message.hasCallback) {
                 // Inject a synthetic callback that returns the result via sendResponse.
