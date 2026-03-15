@@ -55,8 +55,19 @@ var updateNotifications = function() {
 }
 
 var clearNotification = function(options) {
-    // Delegate to background via RPC so pb.notifier.active is authoritatively
-    // updated in the background and the state broadcast properly removes the
-    // notification from the panel on the next pb_state_update.
-    pb.notifier.dismiss(options.key)
+    // Update the local panel state immediately so the UI responds at once.
+    if (pb.notifier && pb.notifier.active) {
+        delete pb.notifier.active[options.key]
+    }
+    updateNotifications()
+
+    // Also dismiss in the background (clears the system notification + syncs state).
+    chrome.notifications.clear(options.key, function() {
+        void chrome.runtime.lastError
+    })
+    chrome.runtime.sendMessage({
+        type: 'call_pb_function',
+        path: ['notifier', 'dismiss'],
+        args: [options.key]
+    }, function() { void chrome.runtime.lastError })
 }
