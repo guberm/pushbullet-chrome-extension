@@ -115,6 +115,8 @@ utils.alphabetizeChats = function(chats) {
 
 utils.checkNativeClient = function(callback) {
     var needsCheck = true
+    var called = false
+    var once = function(result) { if (!called) { called = true; callback(result) } }
 
     if (pb && pb.local && pb.local.devices) {
         needsCheck = false
@@ -130,8 +132,8 @@ utils.checkNativeClient = function(callback) {
         xhr.open('GET', 'http://localhost:20807/check', true)
         xhr.setRequestHeader('Accept', 'application/json')
         xhr.timeout = 1500
-        xhr.ontimeout = function() { callback(null) }
-        xhr.onerror = function() { callback(null) }
+        xhr.ontimeout = function() { once(null) }
+        xhr.onerror = function() { once(null) }
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 var response
@@ -140,7 +142,7 @@ utils.checkNativeClient = function(callback) {
                 } catch (e) {
                 }
 
-                callback(response)
+                once(response)
             }
         }
 

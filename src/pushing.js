@@ -49,6 +49,9 @@ pb.clearFailed = function(push) {
 var processingPush = false
 var processPushQueue = function() {
     if (processingPush) {
+        if (pb.pushQueue.length > 0) {
+            pb.log('Push queued, waiting for current send to finish (' + pb.pushQueue.length + ' in queue)')
+        }
         return
     }
 
