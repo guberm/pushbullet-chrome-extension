@@ -79,6 +79,7 @@ if (navigator.userAgent.indexOf('OPR') >= 0) {
 // ---------------------------------------------------------------------------------------------------
 
 pb.rollingLog = []
+pb.fullLog = []
 pb.log = function(message) {
     try {
         var line
@@ -89,10 +90,13 @@ pb.log = function(message) {
         }
 
         console.log(line)
-        pb.rollingLog.push(JSON.stringify(line))
-
+        var serialized = JSON.stringify(line)
+        pb.rollingLog.push(serialized)
         if (pb.rollingLog.length > 400) {
             pb.rollingLog.shift()
+        }
+        if (pb.settings && pb.settings.enableFullLog) {
+            pb.fullLog.push(serialized)
         }
     } catch (e) {
         console.error(e)

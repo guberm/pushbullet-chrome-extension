@@ -24,6 +24,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse(serializeState(window.pb));
         return true;
     }
+    if (message.type === 'get_full_log') {
+        sendResponse({ log: window.pb.fullLog || [] });
+        return true;
+    }
+    if (message.type === 'clear_full_log') {
+        window.pb.fullLog = [];
+        sendResponse({ ok: true });
+        return true;
+    }
     if (message.type === 'call_pb_function') {
         try {
             let parts = message.path;

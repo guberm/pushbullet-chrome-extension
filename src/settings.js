@@ -25,7 +25,8 @@ pb.loadSettings = function() {
         'instantPushIden': localStorage['instantPushIden'],
         'automaticallyAttachLink': localStorage['automaticallyAttachLink'] !== 'false',
         'disableAnalytics': localStorage['disableAnalytics'] === 'true',
-        'needsDataApproval': localStorage['needsDataApproval'] === 'true'
+        'needsDataApproval': localStorage['needsDataApproval'] === 'true',
+        'enableFullLog': localStorage['enableFullLog'] === 'true'
     }
 
     pb.updateContextMenu()

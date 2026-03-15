@@ -103,6 +103,54 @@ var setUpOptions = function() {
             document.getElementById('category-notifications').style.display = 'none'
         }
     })
+
+    setUpFullLogOption()
+}
+
+var setUpFullLogOption = function() {
+    var checkbox = document.getElementById('full-log-checkbox')
+    var status = document.getElementById('log-status')
+
+    checkbox.checked = pb.settings.enableFullLog
+
+    checkbox.onclick = function() {
+        optionChanged('enableFullLog', checkbox.checked)
+        status.textContent = checkbox.checked ? 'Logging enabled.' : 'Logging disabled.'
+    }
+
+    document.getElementById('log-download-btn').onclick = function() {
+        chrome.runtime.sendMessage({ type: 'get_full_log' }, function(response) {
+            if (chrome.runtime.lastError || !response) {
+                status.textContent = 'Error fetching logs.'
+                return
+            }
+            var lines = response.log
+            if (!lines || lines.length === 0) {
+                status.textContent = 'No logs yet. Enable logging and wait for activity.'
+                return
+            }
+            var text = lines.map(function(l) {
+                try { return JSON.stringify(JSON.parse(l), null, 0) } catch(e) { return l }
+            }).join('\n')
+            var blob = new Blob([text], { type: 'text/plain' })
+            var url = URL.createObjectURL(blob)
+            var a = document.createElement('a')
+            a.href = url
+            a.download = 'pushbullet-logs-' + new Date().toISOString().replace(/[:.]/g, '-') + '.txt'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+            status.textContent = 'Downloaded ' + lines.length + ' log entries.'
+        })
+    }
+
+    document.getElementById('log-clear-btn').onclick = function() {
+        chrome.runtime.sendMessage({ type: 'clear_full_log' }, function() {
+            void chrome.runtime.lastError
+            status.textContent = 'Logs cleared.'
+        })
+    }
 }
 
 var setUpDarkModeOption = function() {
