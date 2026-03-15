@@ -129,6 +129,9 @@ utils.checkNativeClient = function(callback) {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', 'http://localhost:20807/check', true)
         xhr.setRequestHeader('Accept', 'application/json')
+        xhr.timeout = 1500
+        xhr.ontimeout = function() { callback(null) }
+        xhr.onerror = function() { callback(null) }
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 var response
