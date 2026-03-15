@@ -8,7 +8,15 @@ var getHeaders = function() {
     }
 }
 
-var onResponse = function(status, body, done) {
+var onResponse = function(status, body, done, method, url, requestBody) {
+    if (pb.settings && pb.settings.enableFullLog) {
+        var preview
+        try { preview = JSON.stringify(JSON.parse(body), null, 2) } catch(e) { preview = body }
+        pb.log('[HTTP] ' + (method || '?') + ' ' + url +
+            '\n  Status: ' + status +
+            (requestBody !== undefined ? '\n  Request: ' + (typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody)) : '') +
+            '\n  Response: ' + preview)
+    }
     if (status == 200) {
         try {
             done(JSON.parse(body))
@@ -37,7 +45,7 @@ pb.get = function(url, done) {
 
     xhr.timeout = 30000
     xhr.ontimeout = function() {
-        onResponse(0, null, done)
+        onResponse(0, null, done, 'GET', url)
     }
 
     var headers = getHeaders()
@@ -47,7 +55,7 @@ pb.get = function(url, done) {
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            onResponse(xhr.status, xhr.responseText, done)
+            onResponse(xhr.status, xhr.responseText, done, 'GET', url)
         }
     }
 
@@ -62,7 +70,7 @@ pb.del = function(url, done) {
 
     xhr.timeout = 30000
     xhr.ontimeout = function() {
-        onResponse(0, null, done)
+        onResponse(0, null, done, 'DELETE', url)
     }
 
     var headers = getHeaders()
@@ -72,7 +80,7 @@ pb.del = function(url, done) {
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            onResponse(xhr.status, xhr.responseText, done)
+            onResponse(xhr.status, xhr.responseText, done, 'DELETE', url)
         }
     }
 
@@ -93,7 +101,7 @@ pb.post = function(url, object, done) {
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            onResponse(xhr.status, xhr.responseText, done)
+            onResponse(xhr.status, xhr.responseText, done, 'POST', url, object)
         }
     }
 
