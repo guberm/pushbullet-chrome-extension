@@ -10,10 +10,13 @@ var setUpNotificationsContent = function() {
     _notificationsPollInterval = setInterval(function() {
         chrome.runtime.sendMessage({ type: 'get_pb_state' }, function(state) {
             if (chrome.runtime.lastError || !state || !state.notifier) return
-            if (!pb.notifier) pb.notifier = {}
-            var prev = JSON.stringify(pb.notifier.active || {})
-            pb.notifier.active = state.notifier.active || {}
-            if (JSON.stringify(pb.notifier.active) !== prev) {
+            var prev = JSON.stringify(pb.notifier && pb.notifier.active || {})
+            // Must go through deepAssignState so __isFunction markers get
+            // converted to proxy functions (direct assignment breaks button.onclick).
+            deepAssignState(window.pb, state)
+            window.pb.addEventListener = function(evt, cb) { window.addEventListener(evt, cb) }
+            window.pb.removeEventListener = function(evt, cb) { window.removeEventListener(evt, cb) }
+            if (JSON.stringify(pb.notifier && pb.notifier.active || {}) !== prev) {
                 notificationsChangedListener()
             }
         })
