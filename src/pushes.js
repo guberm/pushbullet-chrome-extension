@@ -53,9 +53,6 @@ var needsNotifying = function(push) {
         } else {
             return
         }
-    } else if (push.source_device_iden && !push.target_device_iden && push.source_device_iden == pb.local.device.iden) {
-        pb.log('To "All devices" from this device, not notifying')
-        return
     } else if (push.target_device_iden && pb.local.device && push.target_device_iden != pb.local.device.iden
                && push.source_device_iden != pb.local.device.iden) {
         return
