@@ -21,12 +21,40 @@ async function setupOffscreenDocument() {
   return _offscreenPromise;
 }
 
-chrome.runtime.onStartup.addListener(setupOffscreenDocument);
-chrome.runtime.onInstalled.addListener(setupOffscreenDocument);
+// Health check: while the offscreen doc is alive it pings this SW every 3s,
+// which keeps the SW alive. We use that window to check hasDocument() every 2s
+// and immediately recreate the doc if it died — much faster than the 60s alarm.
+setInterval(async () => {
+  try {
+    if (!await chrome.offscreen.hasDocument()) {
+      setupOffscreenDocument();
+    }
+  } catch(e) {}
+}, 2000);
+
+chrome.runtime.onStartup.addListener(() => {
+  setupOffscreenDocument();
+  chrome.alarms.create('keepAlive', { periodInMinutes: 0.5 });
+});
+chrome.runtime.onInstalled.addListener(() => {
+  setupOffscreenDocument();
+  chrome.alarms.create('keepAlive', { periodInMinutes: 0.5 });
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'keepAlive') {
+    setupOffscreenDocument();
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'wake_up') {
     setupOffscreenDocument();
+    sendResponse(true);
+    return false;
+  }
+
+  if (message.type === 'ping') {
     sendResponse(true);
     return false;
   }

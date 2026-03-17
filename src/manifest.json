@@ -15,6 +15,7 @@
     "minimum_chrome_version": "109",
     "permissions": [
         "activeTab",
+        "alarms",
         "contextMenus",
         "cookies",
         "notifications",
