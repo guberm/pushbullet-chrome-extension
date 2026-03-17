@@ -20,13 +20,27 @@ pb.addEventListener('signed_in', function() {
             })
 
             if (filtered.length > 0) {
-                localStorage.notifyAfter = filtered[filtered.length - 1].modified + 0.001
+                localStorage.notifyAfter = filtered[0].modified + 0.001
             } else if (pushes.length > 0) {
                 localStorage.notifyAfter = pushes[0].modified + 0.001
             }
 
             utils.wrap(function() {
                 var groups = groupify(filtered)
+                // Retain already-visible notifications that are still active on the server.
+                // Without this, notifications shown in previous syncs get dismissed when
+                // notifyAfter advances past them and they no longer appear in `filtered`.
+                Object.keys(pb.visibleGroups).forEach(function(key) {
+                    if (!groups[key]) {
+                        var visiblePushes = pb.visibleGroups[key]
+                        if (visiblePushes && visiblePushes.length > 0) {
+                            var storedPush = pb.local.pushes && pb.local.pushes[visiblePushes[0].iden]
+                            if (storedPush && !storedPush.dismissed) {
+                                groups[key] = visiblePushes
+                            }
+                        }
+                    }
+                })
                 updateNotifications(groups)
                 pb.savePushes()
             })
@@ -53,8 +67,9 @@ var needsNotifying = function(push) {
         } else {
             return
         }
-    } else if (push.target_device_iden && pb.local.device && push.target_device_iden != pb.local.device.iden
-               && push.source_device_iden != pb.local.device.iden) {
+    } else if (push.direction != 'self' && push.target_device_iden && pb.local.device && push.target_device_iden != pb.local.device.iden
+               && push.source_device_iden != pb.local.device.iden
+               && !(push.awake_app_guids && push.awake_app_guids.indexOf('extension-' + localStorage.client_id) != -1)) {
         return
     } else if (push.receiver_iden != pb.local.user.iden && !push.channel_iden && !push.client_iden) {
         return
