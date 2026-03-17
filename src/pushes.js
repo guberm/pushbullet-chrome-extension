@@ -4,9 +4,25 @@ var pendingGroups = {}
 
 pb.addEventListener('signed_in', function() {
     pb.visibleGroups = {}
+    var visibleGroupsRestored = false
 
     pb.addEventListener('pushes_ready', function() {
         var notifyAfter = parseFloat(localStorage.notifyAfter) || 0
+
+        // On the first pushes_ready after a SW restart, restore any notifications that were
+        // visible before the restart but are now below notifyAfter (so not in `pushes`).
+        if (!visibleGroupsRestored) {
+            visibleGroupsRestored = true
+            try {
+                var restoredMap = localStorage.activeGroupKeys ? JSON.parse(localStorage.activeGroupKeys) : {}
+                Object.keys(restoredMap).forEach(function(key) {
+                    var push = pb.local.pushes && pb.local.pushes[restoredMap[key]]
+                    if (push && !push.dismissed) {
+                        pb.visibleGroups[key] = [push]
+                    }
+                })
+            } catch(e) {}
+        }
 
         var pushes = utils.asArray(pb.local.pushes).sort(function(a, b) {
             return b.modified - a.modified
@@ -42,6 +58,13 @@ pb.addEventListener('signed_in', function() {
                     }
                 })
                 updateNotifications(groups)
+                // Persist active group keys (key → push iden) so they survive SW restarts.
+                var activeGroupMap = {}
+                Object.keys(pb.visibleGroups).forEach(function(key) {
+                    var group = pb.visibleGroups[key]
+                    if (group && group[0] && group[0].iden) activeGroupMap[key] = group[0].iden
+                })
+                localStorage.activeGroupKeys = JSON.stringify(activeGroupMap)
                 pb.savePushes()
             })
         } else {
